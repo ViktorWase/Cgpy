@@ -53,47 +53,36 @@ class Operation():
 		self.op_name = op_name
 		if op_name == "sin":
 			self.func = lambda x: sin(x)
-			self.dual_func = lambda x: sind(x)
 			self.is_binary = False
 		elif op_name == "cos":
 			self.func = lambda x: cos(x)
-			self.dual_func = lambda x: cosd(x)
 			self.is_binary = False
 		elif op_name == "acos":
 			self.func = lambda x: acos(x) if x<1 and x>-1 else 0.0
-			self.dual_func = lambda x: acosd(x) if x.a<1 and x.a>-1 else DualNumber(0.0,0.0)
 			self.is_binary = False
 		elif op_name == "asin":
 			self.func = lambda x: asin(x) if x<1 and x>-1 else 0.0
-			self.dual_func = lambda x: asind(x) if x.a<1 and x.a>-1 else DualNumber(0.0,0.0)
 			self.is_binary = False
 		elif op_name == "+":
 			self.func = lambda x,y: x+y
-			self.dual_func = lambda x,y: x+y
 			self.is_binary = True
 		elif op_name == "-":
 			self.func = lambda x,y: x-y
-			self.dual_func = lambda x,y: x-y
 			self.is_binary = True
 		elif op_name == "*":
 			self.func = lambda x,y: x*y
-			self.dual_func = lambda x,y: x*y
 			self.is_binary = True
 		elif op_name == "sqr":
 			self.func = lambda x: x*x
-			self.dual_func = lambda x: x*x
 			self.is_binary = False
 		elif op_name == "log":
 			self.func = lambda x: log(x) if x>0 else 0.0
-			self.dual_func = lambda x: logd(x) if x.a>0 else DualNumber(0.0, 0.0)
 			self.is_binary = False
 		elif op_name == "/":
 			self.func = lambda x, y: x/y if y!=0 else 0.0
-			self.dual_func = lambda x, y: x/y if y.a!=0 else DualNumber(0.0, 0.0)
 			self.is_binary = True
 		elif op_name == "id":
 			self.func = lambda x: x
-			self.dual_func = lambda x: x
 			self.is_binary = False
 		else:
 			assert(False)
