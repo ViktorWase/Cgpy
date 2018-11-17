@@ -1,6 +1,37 @@
 """
 CGP stands for Cartesian Genetic Programming, and is a network that 
 represents a function. It's really nice. Google it!
+
+It is defined by a gene and an operation table. The operation table is 
+a list of mathematical operations (for example [+, -, *, cos]). The
+gene consists of n nodes and an ouput node. Each node, except for the
+output, consists of 3 numbers: the operation and the two inputs. There
+are always two inputs. If the operation is unary (meaning that it only
+takes one input - for example cos), then the second input is simply ignored.
+The last node defines which of the other nodes that is to be the output.
+
+Let's the the example of a 2-dimensional CGP, with 
+operation_table =  [+, -, *, cos]
+gene = [0, 1, 0,  1, 2, 1,  3]
+
+let's call the inputs x0 and x1.
+One can illustrate what's going on by switching out the elements of the genes
+that correspond to operations.
+Thus [0, 1, 0,  0, 2, 1,  3] becomes [+, 1, 0,  -, 2, 1,  3]
+since operation_table[0] = + and operation_table[1] = -
+
+The other two numbers in the nodes are the indexes of the inputs. 0 in this 
+case corresponds to x0, and 1 to x1. Simple. But what would 2 means? That is 
+simply the first node (the one that goes: +, 1, 0,).
+
+Thus [0, 1, 0,  0, 2, 1,  3] becomes [+, x1, x0,  -, node0, x1,  3]
+
+The last number works on the same principle and hence 3 corresponds to
+the second node.
+
+Okay, so what does all of this mean? Well, the second node is the output.
+And the second node is the first node minus x1. The first node is x1 plus x0.
+Which means that [0, 1, 0,  1, 2, 1,  3] is (x1+x0)-x1.
 """
 
 from math import sin, cos, sqrt, log, pow, exp, fabs, asin, acos, pi
@@ -137,11 +168,11 @@ class CGP():
 
 		self.is_constant = None
 
-		self.has_setup_used_genes = False
+		self.has_setup_used_nodes = False
 
 		if not fast_setup:
 			self.gene_sanity_check()
-			self.setup_used_genes_list()
+			self.setup_used_nodes_list()
 
 		self.nr_of_nodes = int((len(self.gene)-1)/3)+self.dims+self.nr_of_parameters
 
@@ -162,10 +193,10 @@ class CGP():
 			assert self.gene[gene_counter] < i+nr_of_ins
 			gene_counter += 1
 
-	def setup_used_genes_list(self):
+	def setup_used_nodes_list(self):
 		# Nr of nodes excluding the output node
 		nr_of_nodes = int((len(self.gene)-1)/3)+self.dims+self.nr_of_parameters
-		self.has_setup_used_genes = True
+		self.has_setup_used_nodes = True
 		class CGPNode():
 			"""Temporary node object"""
 			def __init__(self, upstream1, upstream2, is_used=False):
@@ -218,7 +249,7 @@ class CGP():
 		nodes = nodes[self.dims+self.nr_of_parameters:]
 
 		assert len(nodes) == int((len(self.gene)-1)/3)
-		self.used_genes = [node.is_used for node in nodes]
+		self.used_nodes = [node.is_used for node in nodes]
 
 
 	def eval(self, X, parameters = []):
@@ -252,7 +283,7 @@ class CGP():
 		node_nr = total_dims
 		gene_counter = 0
 		for node_nr in range(total_dims, n):
-			if self.setup_used_genes_list==False or self.used_genes[node_nr-total_dims]:
+			if self.setup_used_nodes_list==False or self.used_nodes[node_nr-total_dims]:
 				assert(gene_counter<len(self.gene))
 				assert(self.gene[gene_counter]<len(self.op_table))
 
@@ -285,7 +316,7 @@ class CGP():
 			else:
 				gene_counter += 3
 		#assert(sum([x==None for x in all_node_vals])==0)
-		assert(sum([x==None for x in all_node_vals]) == sum(x==False for x in self.used_genes))
+		assert(sum([x==None for x in all_node_vals]) == sum(x==False for x in self.used_nodes))
 		assert all_node_vals[self.gene[gene_counter]] != None
 		assert gene_counter == len(self.gene)-1
 
@@ -320,7 +351,7 @@ class CGP():
 		assert int((len(self.gene)-1)/3) ==  nr_of_nondim_and_non_par_nodes
 
 		# Create the new CGP object
-		new_cgp = CGP(self.dims, self.op_table, new_gene, nr_of_parameters=self.nr_of_parameters, fast_setup=self.setup_used_genes_list==False)
+		new_cgp = CGP(self.dims, self.op_table, new_gene, nr_of_parameters=self.nr_of_parameters, fast_setup=self.setup_used_nodes_list==False)
 		return new_cgp
 
 if __name__ == '__main__':
