@@ -126,7 +126,7 @@ def get_gene_max_values(dims, nr_of_parameters, len_of_op_table, nr_of_nodes, no
 	max_vals[-1] = dim_and_pars + nr_of_nodes - 1
 	return max_vals
 
-def create_random_cgp(dims, nr_of_parameters, op_table, nr_of_nodes, nodes_per_layer=1):
+def create_random_cgp(dims, nr_of_parameters, op_table, nr_of_nodes, nodes_per_layer=1, fast_setup=False):
 	"""
 	Does what it says on the tin, duh.
 	"""
@@ -135,7 +135,7 @@ def create_random_cgp(dims, nr_of_parameters, op_table, nr_of_nodes, nodes_per_l
 
 	random_gene = [randint(0, max_vals[i]) for i in range(len(max_vals))]
 
-	return CGP(dims, op_table, random_gene, nr_of_parameters=0)
+	return CGP(dims, op_table, random_gene, nr_of_parameters=nr_of_parameters, fast_setup=fast_setup)
 
 """
 The functions convert_cgp_2_str and convert_rec are used by the CGP-method calc_function_str().
