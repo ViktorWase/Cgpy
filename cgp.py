@@ -137,6 +137,100 @@ def create_random_cgp(dims, nr_of_parameters, op_table, nr_of_nodes, nodes_per_l
 
 	return CGP(dims, op_table, random_gene, nr_of_parameters=0)
 
+"""
+The functions convert_cgp_2_str and convert_rec are used by the CGP-method calc_function_str().
+They create a string that is human readable and represents the mathematical function
+of the CGP object.
+"""
+def convert_cgp_2_str(op_table, gene, variable_names, nr_of_nodes, dims, parameters=[]):
+	# We start at the end node and recursively work our way back.
+	assert ( nr_of_nodes > 0 )
+	assert ( dims > 0 )
+	assert ( len(variable_names) >= dims )
+
+	current_node_nr = gene[-1]
+	return convert_rec(op_table, gene, variable_names, nr_of_nodes, dims + len(parameters), len(parameters), current_node_nr, parameters=parameters)
+
+def convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_parameters, current_node_nr, parameters=[]):
+	"""
+	A recursive help function that takes a node in the CGP object and converts it into a str.
+	Since a node depends on other nodes, it will recursively call this function
+	but with the other nodes as input. 
+	If the input is a variable or a parameter, then it will simply return the 
+	name of the variable (as given by variable_name), or the value of the 
+	parameter (as given by parameters).
+	"""
+	assert(nr_of_parameters == len(parameters))
+	# Check if the input is a variable/parameter.
+	# If so, return the corresponding str.
+	if(current_node_nr < total_dims):
+		nr_of_vars = total_dims-nr_of_parameters
+		if(current_node_nr < nr_of_vars):
+			return variable_names[current_node_nr]
+		else:
+			return str(parameters[current_node_nr - nr_of_vars])
+
+	op = op_table[gene[3 * (current_node_nr-total_dims) + 0]]
+	nr_of_vars = total_dims-nr_of_parameters
+
+
+	if op.is_binary:
+		# The string is given by (str1)#(str2) if the operation is binary. 
+		# The #-sign is replaced by the sign of the operation. str1 and str2 
+		# are the strings returned by the 2 following recursive calls.
+		left_str = None
+		right_str = None
+
+		# Check the left_str (str1) to see if it's a variable/parameter...
+		if( gene[3 * (current_node_nr-total_dims) + 1] < total_dims ):
+
+			if gene[3 * (current_node_nr-total_dims) + 1] < nr_of_vars:
+				left_str = variable_names[gene[3 * (current_node_nr-total_dims) + 1]]
+			else:
+				left_str = str(parameters[gene[3 * (current_node_nr-total_dims) + 1] - nr_of_vars])
+
+		else:
+			#... if it isn't, we need a recursive function call to calc it.
+			assert( gene[3 * (current_node_nr-total_dims) + 1] < current_node_nr )
+			left_str = "("+convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_parameters, gene[3 * (current_node_nr-total_dims) + 1], parameters=parameters)+")"
+
+		# Repeat the process with the right_str (str2)
+		if( gene[3 * (current_node_nr-total_dims) + 2] < total_dims ):
+			if gene[3 * (current_node_nr-total_dims) + 2] < nr_of_vars:
+				right_str = variable_names[gene[3 * (current_node_nr-total_dims) + 2]]
+			else:
+				right_str = str(parameters[gene[3 * (current_node_nr-total_dims) + 2] - nr_of_vars])
+
+		else:
+			assert( gene[3 * (current_node_nr-total_dims) + 2] < current_node_nr )
+			right_str = "("+convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_parameters, gene[3 * (current_node_nr-total_dims) + 2], parameters=parameters)+")"
+		return left_str+op.str+right_str
+	else: # op.is_binary
+
+		# Things are simpler if the string is unary (non-binary). Then
+		# we just return func(str1), where func is the name of the function
+		# and str1 is the node that it depends on.
+
+		middle_str = None
+		# Check the middle_str (str1) to see if it's a variable/parameter...
+		if( gene[3 * (current_node_nr-total_dims) + 1] < total_dims ):
+
+			if gene[3 * (current_node_nr-total_dims) + 1] < nr_of_vars:
+				middle_str = variable_names[gene[3 * (current_node_nr-total_dims) + 1]]
+			else:
+				middle_str = str(parameters[gene[3 * (current_node_nr-total_dims) + 1] - nr_of_vars])
+		else:
+			#... if it isn't, we need a recursive function call to calc it.
+			middle_str = convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_parameters, gene[3 * (current_node_nr-total_dims) + 1], parameters=parameters)
+
+		# NOTE: sqr means to-the-power-of-two. This is not written
+		# as sqr(x), but x^2. This is why it is treated separately.
+		if op.str == "sqr":
+			return "("+middle_str+")^{2}"
+			
+		return op.str+"("+middle_str+")"
+
+
 class CGP():
 	"""
 	A Cartesian Genetic Programming object.
@@ -156,7 +250,6 @@ class CGP():
 		self.nodes_per_layer = nodes_per_layer
 
 		self.is_constant = None
-
 		self.has_setup_used_nodes = False
 
 		if not fast_setup:
@@ -164,8 +257,6 @@ class CGP():
 			self.setup_used_nodes_list()
 
 		self.nr_of_nodes = int((len(self.gene)-1)/3)+self.dims+self.nr_of_parameters
-
-		assert(dims > 0)
 
 	def gene_sanity_check(self):
 		"""
@@ -222,8 +313,6 @@ class CGP():
 				gene_counter += 2
 		assert gene_counter == len(self.gene)-1
 
-		print(self.gene)
-
 		assert len(nodes) > self.gene[gene_counter]
 		nodes[self.gene[gene_counter]].update_is_used()
 
@@ -272,7 +361,7 @@ class CGP():
 		node_nr = total_dims
 		gene_counter = 0
 		for node_nr in range(total_dims, n):
-			if self.setup_used_nodes_list==False or self.used_nodes[node_nr-total_dims]:
+			if self.has_setup_used_nodes==False or self.used_nodes[node_nr-total_dims]:
 				assert(gene_counter<len(self.gene))
 				assert(self.gene[gene_counter]<len(self.op_table))
 
@@ -305,12 +394,31 @@ class CGP():
 			else:
 				gene_counter += 3
 		#assert(sum([x==None for x in all_node_vals])==0)
-		assert(sum([x==None for x in all_node_vals]) == sum(x==False for x in self.used_nodes))
+		if self.has_setup_used_nodes:
+			assert(sum([x==None for x in all_node_vals]) == sum(x==False for x in self.used_nodes))
 		assert all_node_vals[self.gene[gene_counter]] != None
 		assert gene_counter == len(self.gene)-1
 
 		# Return the value of the last node.
 		return all_node_vals[self.gene[gene_counter]]
+
+	def calc_function_str(self, parameters=[], var_names=None):
+		"""
+		This function returns the mathematical function of the CGP as a string.
+		For example 'x0+cos(0.4*x0)'.
+		"""
+		if len(parameters) != self.nr_of_parameters:
+			print("Wrong number of parameters in the convert2str function.")
+
+		assert len(parameters) == self.nr_of_parameters
+
+		if var_names == None:
+			var_names = ["x"+str(i+1) for i in range(self.dims)]
+
+		total_dims = len(parameters) + self.dims
+		nr_of_nodes = int((len(self.gene)-1)/3) + total_dims
+
+		return convert_cgp_2_str(self.op_table, self.gene, var_names, nr_of_nodes, self.dims, parameters=parameters)
 
 	def get_mutated_copy(self):
 		"""
