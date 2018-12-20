@@ -458,6 +458,20 @@ class CGP():
 		new_cgp = CGP(self.dims, self.op_table, new_gene, nr_of_parameters=self.nr_of_parameters, fast_setup=self.setup_used_nodes_list==False)
 		return new_cgp
 
+	def convert2str(self, parameters=[], var_names=None):
+		if len(parameters) != self.nr_of_parameters:
+			print("Wrong number of parameters in the convert2str function.")
+
+		assert len(parameters) == self.nr_of_parameters
+
+		if var_names == None:
+			var_names = ["x"+str(i+1) for i in range(self.dims)]
+
+		total_dims = len(parameters) + self.dims
+		nr_of_nodes = int((len(self.gene)-1)/3) + total_dims
+
+		return convert_cgp_2_str(self.op_table, self.gene, var_names, nr_of_nodes, self.dims, parameters=parameters)
+
 	def print_function(self, parameters=[], var_names=None):
 		print(self.convert2str(parameters=parameters, var_names=var_names))
 
@@ -521,28 +535,6 @@ class CGP():
 				par_nr = x - self.dims
 				is_parameter_used[par_nr] = True
 		return is_parameter_used
-
-def how_many_genes_exists(dims, nr_of_nodes, ignore_id=True):
-	from operation_table import op_table
-
-	nr_of_ops = len(op_table)
-	if ignore_id:
-		if 'id' in [op.op_name for op in op_table]:
-			nr_of_ops -= 1
-
-	nr_of_binary_ops = sum([1 if op.is_binary else 0 for op in op_table])
-	nr_of_unary_ops = nr_of_ops - nr_of_binary_ops
-
-	counter = 1
-	for i in range(nr_of_nodes):
-		prev_nodes = dims + i
-
-		counter *= nr_of_binary_ops*prev_nodes*prev_nodes + nr_of_unary_ops*prev_nodes
-
-	# And lastly the choice of output node
-	counter *= nr_of_nodes+dims
-
-	return counter
 
 if __name__ == '__main__':
 	# This are all operations that the CGP is allowed to use. These are not set in stone.
