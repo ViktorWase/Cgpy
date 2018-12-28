@@ -427,7 +427,7 @@ class CGP():
 
 		return convert_cgp_2_str(self.op_table, self.gene, var_names, nr_of_nodes, self.dims, parameters=parameters)
 
-	def get_mutated_copy(self):
+	def get_mutated_copy(self, mute_rate=0.1):
 		"""
 		Creates a new CGp object by creating a new gene, that is a mutated
 		version of the one in this object.
@@ -437,7 +437,12 @@ class CGP():
 		of the gene is actually not used (fun fact, the same goes for the 
 		human genome).
 		"""
-		mute_rate = 0.1
+		if mute_rate<=0:
+			print("The mute_rate in get_mutated_copy of CGP is less than or equal than zero. This is not allowed.")
+			assert mute_rate>0
+		if mute_rate>1:
+			print("mute_rate in get_mutated_copy of CGP is more than 1. Setting it to 1.")
+			mute_rate = 1.0
 		new_gene = list(self.gene)
 		nr_of_nondim_and_non_par_nodes = self.nr_of_nodes - self.dims - self.nr_of_parameters
 		max_vals = get_gene_max_values(self.dims, self.nr_of_parameters, len(self.op_table), nr_of_nondim_and_non_par_nodes, nodes_per_layer=self.nodes_per_layer)
