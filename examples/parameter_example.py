@@ -19,7 +19,7 @@ nr_of_parameters = 2 # a and b
 # The second and third are the inputs, which means node 1 (y) and and node 0 (x). 
 node3 = [4, 0, 0] # sin (4) of x (0) and then a dummy number (0) since sin only takes one input.
 node4 = [2, 1, 3] # a*node3 = a*sin(x)
-node5 = [1, 0, 1] # x-node4 = x - a*sin(x)
+node5 = [1, 0, 4] # x-node4 = x - a*sin(x)
 node6 = [1, 5, 2] # node5 - b = x-a*sin(x)-b
 
 # The last number of the gene is the index of the node that we want as output.
