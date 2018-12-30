@@ -480,17 +480,6 @@ class CGP():
 	def print_function(self, parameters=[], var_names=None):
 		print(self.convert2str(parameters=parameters, var_names=var_names))
 
-	def merge_lists(self, x1, x2):
-		out = []
-
-		for x in x1:
-			if x not in out:
-				out.append(x)
-		for x in x2:
-			if x not in out:
-				out.append(x)
-		return out
-
 	def which_variables_and_parameters_are_used(self):
 		# Combined dimensionality of the variables and parameters.
 		total_dims = self.dims + self.nr_of_parameters
@@ -516,8 +505,9 @@ class CGP():
 				gene_counter += 1
 				x2 = node_depends_on_which_nodes[self.gene[gene_counter]]
 				gene_counter += 1
-
-				x = self.merge_lists(x1, x2)
+				# Combine the two lists into one list.
+				# The new list contains one instance of each value. No doubles.
+				x = list(set(x2).union(set(x1)))
 			else:
 				x = list(node_depends_on_which_nodes[self.gene[gene_counter]])
 				gene_counter += 1
