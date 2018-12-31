@@ -37,6 +37,8 @@ Which means that [0, 1, 0,  1, 2, 1,  3] is (x1+x0)-x1.
 from math import sin, cos, sqrt, log, pow, exp, fabs, asin, acos, pi
 from random import randint, random
 from copy import copy
+import sys # Used to check python version.
+from typing import List, Union, Callable, cast # mypy for static typing. Run 'mypy cgp.py' to get results. mypy is installable via pip.
 
 class Operation():
 	"""
@@ -49,8 +51,10 @@ class Operation():
 		- a dual version of the function. This means 
 		  that dual numbers are used.
 	"""
-	def __init__(self, op_name):
-		self.op_name = op_name
+	def __init__(self, op_name:str):
+		self.is_binary: bool
+		self.op_name:str = op_name
+		self.func: Union[Callable[[float, float], float], Callable[[float], float]]
 		if op_name == "sin":
 			self.func = lambda x: sin(x)
 			self.is_binary = False
@@ -85,10 +89,10 @@ class Operation():
 			self.func = lambda x: x
 			self.is_binary = False
 		else:
-			assert(False)
-		self.str = copy(op_name)
+			assert(False) # TODO: Change to an error.
+		self.str = copy(op_name) # TODO: Is the copy actually needed?
 
-def get_gene_max_values(dims, nr_of_parameters, len_of_op_table, nr_of_nodes, nodes_per_layer=1):
+def get_gene_max_values(dims:int, nr_of_parameters:int, len_of_op_table:int, nr_of_nodes:int, nodes_per_layer:int = 1)->List[int]:
 	"""
 	A gene is a list of n ints, that define the CGP. Each such number has 
 	a minimum value, and a maximum value. The minimum value is always zero.
@@ -108,7 +112,7 @@ def get_gene_max_values(dims, nr_of_parameters, len_of_op_table, nr_of_nodes, no
 
 	# Each node has 3 ints: the two inputs and the operation.
 	len_of_gene = nr_of_nodes*3 + 1
-	max_vals = [None]*len_of_gene
+	max_vals = [-1]*len_of_gene
 
 	layer = 0
 	for node_count in range(nr_of_nodes):
@@ -124,9 +128,10 @@ def get_gene_max_values(dims, nr_of_parameters, len_of_op_table, nr_of_nodes, no
 	# The last int of the gene just points to one of the inputs, parameters or nodes and
 	# calls it the outout.
 	max_vals[-1] = dim_and_pars + nr_of_nodes - 1
+	assert min(max_vals)>=0
 	return max_vals
 
-def create_random_cgp(dims, nr_of_parameters, op_table, nr_of_nodes, nodes_per_layer=1, fast_setup=False):
+def create_random_cgp(dims:int, nr_of_parameters:int, op_table:List[Operation], nr_of_nodes:int, nodes_per_layer:int = 1, fast_setup:bool = False):
 	"""
 	Does what it says on the tin, duh.
 	"""
@@ -142,11 +147,12 @@ The functions convert_cgp_2_str and convert_rec are used by the CGP-method calc_
 They create a string that is human readable and represents the mathematical function
 of the CGP object.
 """
-def convert_cgp_2_str(op_table, gene, variable_names, nr_of_nodes, dims, parameters=[]):
+def convert_cgp_2_str(op_table:List[Operation], gene:List[int], variable_names:List[str], nr_of_nodes:int, dims:int, parameters=[]):
 	# We start at the end node and recursively work our way back.
 	assert ( nr_of_nodes > 0 )
 	assert ( dims > 0 )
 	assert ( len(variable_names) >= dims )
+	assert min(gene)>=0
 
 	current_node_nr = gene[-1]
 	return convert_rec(op_table, gene, variable_names, nr_of_nodes, dims + len(parameters), len(parameters), current_node_nr, parameters=parameters)
@@ -236,7 +242,7 @@ class CGP():
 	This is a way of denoting a mathematical function as
 	a "gene" that can be used in evolutionary optimizations.
 	"""
-	def __init__(self, dims, op_table, gene, nr_of_parameters=0, fast_setup=False, nodes_per_layer=1):
+	def __init__(self, dims: int, op_table:List[Operation], gene: List[int], nr_of_parameters:int = 0, fast_setup:bool = False, nodes_per_layer:int = 1):
 		assert len(gene)>0
 		assert dims > 0
 		assert len(op_table) > 0
@@ -257,7 +263,7 @@ class CGP():
 
 		self.nr_of_nodes = int((len(self.gene)-1)/3)+self.dims+self.nr_of_parameters
 
-	def gene_sanity_check(self):
+	def gene_sanity_check(self)->None:
 		"""
 		Makes sure that the gene input is consistent.
 		"""
@@ -279,7 +285,7 @@ class CGP():
 
 		class CGPNode():
 			"""Temporary node object"""
-			def __init__(self, upstream1, upstream2, is_used=False):
+			def __init__(self, upstream1, upstream2, is_used:int = False):
 				self.upstream1 = upstream1
 				self.upstream2 = upstream2
 				self.is_used = is_used
@@ -329,40 +335,43 @@ class CGP():
 		assert len(nodes) == int((len(self.gene)-1)/3)
 		self.used_nodes = [node.is_used for node in nodes]
 
-
-	def eval(self, X, parameters = []):
+	def eval(self, X: List[float], parameters: List[float] = []) -> float:
 		"""
 		Evaluates the function at point X using the parameters
 		in parameters.
-
-		If derivative is true, then it takes the derivative in the point as well.
-		It return the tuple (function_val, derivative_val) in that case.
-
-		der_dir is the direction of the derivative. Which means that der_dir=0 => derivative
-		with respect to X[0], and so on. If der_dir >= len(X), then we will start deriving 
-		with respect to the parameters
 		"""
-		assert(self.nr_of_parameters == len(parameters))
+		if self.nr_of_parameters != len(parameters):
+			raise Exception("The parameter dimensions are off. Expected", self.nr_of_parameters," but got", len(parameters))
+
 		if self.dims != len(X):
-			print("There is a mismatch in dimensions in CGP. There should be", self.dims, " but the input is ", len(X))
-		assert(self.dims == len(X))
+			raise Exception("There is a mismatch in dimensions in CGP. There should be", self.dims, " but the input is ", len(X))
+
+		# Python 2 doesn't convert int/int to float, so the input
+		# has to be converted to floats to make sure it is consistent.
+		if sys.version_info[0] < 3:
+			X = [float(val) for val in X]
+			if self.nr_of_parameters:
+				parameters = [float(val) for val in parameters]
 
 		# Combined dimensionality of the variables and parameters.
-		total_dims = len(X) + len(parameters)
+		total_dims:int = len(X) + len(parameters)
 
 		# Okay, so this is a litte weird. But n is the total number of 
 		# nodes used. A node is something that has a value and (possibly)
 		# connections to other nodes. The returned value is the value of
 		# the last node.
-		n = int((len(self.gene)-1)/3) + total_dims
-		all_node_vals = [None] * n 
+		n:int = int((len(self.gene)-1)/3) + total_dims
+		all_node_vals: List[float] = [0.0] * n
+		has_node_val_been_set: List[bool] = [False]*n
 
 		# The inputs (variables and parameters) are the first nodes.
 		for i in range(total_dims):
 			if i < len(X):
 				all_node_vals[i] = X[i]
+				has_node_val_been_set[i] = True
 			else:
 				all_node_vals[i] = parameters[i-len(X)]
+				has_node_val_been_set[i] = True
 
 		# Okay, so let's step thru all the other nodes.
 		node_nr = total_dims
@@ -379,7 +388,7 @@ class CGP():
 				# earlier in the list.
 				op = self.op_table[self.gene[gene_counter]]
 				gene_counter += 1
-				node_val = None
+				node_val:float
 
 				# The node has 2 connections if the operation is binary,
 				# and 1 connection otherwise.
@@ -396,38 +405,45 @@ class CGP():
 					gene_counter += 1
 
 					node_val = op.func(x)
-				assert( all_node_vals[node_nr] == None)
+				assert (not has_node_val_been_set[node_nr])
 				all_node_vals[node_nr] = node_val
+				has_node_val_been_set[node_nr] = True
 			else:
 				gene_counter += 3
-		#assert(sum([x==None for x in all_node_vals])==0)
 		if self.has_setup_used_nodes:
-			assert(sum([x==None for x in all_node_vals]) == sum(x==False for x in self.used_nodes))
-		assert all_node_vals[self.gene[gene_counter]] != None
+			assert(sum([x==False for x in has_node_val_been_set]) == sum(x==False for x in self.used_nodes))
+		else:
+			assert all(has_node_val_been_set)
+		assert has_node_val_been_set[self.gene[gene_counter]]
 		assert gene_counter == len(self.gene)-1
 
 		# Return the value of the last node.
 		return all_node_vals[self.gene[gene_counter]]
 
-	def calc_function_str(self, parameters=[], var_names=None):
+	def calc_function_str(self, parameters=[], var_names:List[str]=None)->str: #TODO: Add the number of significant figures of the parameters.
+	# TODO: Is this used?
 		"""
 		This function returns the mathematical function of the CGP as a string.
 		For example 'x0+cos(0.4*x0)'.
 		"""
 		if len(parameters) != self.nr_of_parameters:
-			print("Wrong number of parameters in the convert2str function.")
+			raise Exception("Wrong number of parameters in the convert2str function.")
 
-		assert len(parameters) == self.nr_of_parameters
-
+		# The variable names are automatically set to 'x1', 'x2', 'x3' and so
+		# on if they are not given as inputs.
 		if var_names == None:
 			var_names = ["x"+str(i+1) for i in range(self.dims)]
+		var_names = cast(List[str], var_names) # Ignore this. It's only for mypy.
 
-		total_dims = len(parameters) + self.dims
-		nr_of_nodes = int((len(self.gene)-1)/3) + total_dims
+		if len(var_names) != self.dims:
+			raise Exception("The input var_names has incorrect dimensions. Expected", self.dims," but got", len(var_names))
+
+		total_dims:int = len(parameters) + self.dims
+		nr_of_nodes:int = int((len(self.gene)-1)/3) + total_dims
 
 		return convert_cgp_2_str(self.op_table, self.gene, var_names, nr_of_nodes, self.dims, parameters=parameters)
 
-	def get_mutated_copy(self, mute_rate=0.1):
+	def get_mutated_copy(self, mute_rate:float = 0.1)->'CGP':
 		"""
 		Creates a new CGp object by creating a new gene, that is a mutated
 		version of the one in this object.
@@ -437,21 +453,22 @@ class CGP():
 		of the gene is actually not used (fun fact, the same goes for the 
 		human genome).
 		"""
-		if mute_rate<=0:
-			print("The mute_rate in get_mutated_copy of CGP is less than or equal than zero. This is not allowed.")
-			assert mute_rate>0
-		if mute_rate>1:
+		if mute_rate<0:
+			raise Exception("The mute_rate in get_mutated_copy of CGP is less than than zero. This is not allowed.")
+		elif mute_rate>1:
 			print("mute_rate in get_mutated_copy of CGP is more than 1. Setting it to 1.")
 			mute_rate = 1.0
-		new_gene = list(self.gene)
-		nr_of_nondim_and_non_par_nodes = self.nr_of_nodes - self.dims - self.nr_of_parameters
-		max_vals = get_gene_max_values(self.dims, self.nr_of_parameters, len(self.op_table), nr_of_nondim_and_non_par_nodes, nodes_per_layer=self.nodes_per_layer)
 
+		new_gene = list(self.gene)
+		nr_of_nondim_and_non_par_nodes:int = self.nr_of_nodes - self.dims - self.nr_of_parameters
+		max_vals:List[int] = get_gene_max_values(self.dims, self.nr_of_parameters, len(self.op_table), nr_of_nondim_and_non_par_nodes, nodes_per_layer=self.nodes_per_layer)
+
+		# Mutate the gene.
 		for i in range(len(new_gene)):
 			if random() < mute_rate:
 				new_gene[i] = randint(0, max_vals[i])
 
-		# Let's throw in a few test cases when we are at it.
+		# Let's throw in a few test cases while we are at it.
 		assert len(max_vals) == len(new_gene)
 		for i in range(len(new_gene)):
 			assert new_gene[i] <= max_vals[i]
@@ -460,10 +477,10 @@ class CGP():
 		assert int((len(self.gene)-1)/3) ==  nr_of_nondim_and_non_par_nodes
 
 		# Create the new CGP object
-		new_cgp = CGP(self.dims, self.op_table, new_gene, nr_of_parameters=self.nr_of_parameters, fast_setup=self.setup_used_nodes_list==False)
+		new_cgp = CGP(self.dims, self.op_table, new_gene, nr_of_parameters=self.nr_of_parameters, fast_setup = not self.setup_used_nodes_list)
 		return new_cgp
 
-	def convert2str(self, parameters=[], var_names=None):
+	def convert2str(self, parameters=[], var_names:List[str]=None):
 		if len(parameters) != self.nr_of_parameters:
 			print("Wrong number of parameters in the convert2str function.")
 
@@ -471,6 +488,7 @@ class CGP():
 
 		if var_names == None:
 			var_names = ["x"+str(i+1) for i in range(self.dims)]
+		var_names = cast(List[str], var_names) # Ignore this. It's only for mypy.
 
 		total_dims = len(parameters) + self.dims
 		nr_of_nodes = int((len(self.gene)-1)/3) + total_dims
@@ -480,11 +498,24 @@ class CGP():
 	def print_function(self, parameters=[], var_names=None):
 		print(self.convert2str(parameters=parameters, var_names=var_names))
 
-	def which_variables_and_parameters_are_used(self):
+	def which_variables_and_parameters_are_used(self)->List[int]:
+		"""
+		Returns a list of all variables and parameters that are actually 
+		used.
+		Note that if the function is x-x, x/x, 0*x and so on, then
+		the variable x IS used.
+
+		Example: There are 3 variables (let's call them x, y, z) and two
+		parameters (a & b) and the function is cos(y)*b+z/z.
+		The output would be [1, 2, 4], where 1 is the y, 2 is z and 4 is b.
+		"""
+		# TODO: This returns a list of ints, but which_parameters_are_used returns a list of bools. Change this to bools.
+		# TODO: Add some test for this one in the unit tests.
+
 		# Combined dimensionality of the variables and parameters.
 		total_dims = self.dims + self.nr_of_parameters
 		n = int((len(self.gene)-1)/3) + total_dims
-		node_depends_on_which_nodes = [[] for _ in range(n)]
+		node_depends_on_which_nodes:List[List[int]] = [[] for _ in range(n)]
 
 		gene_counter = 0
 
@@ -505,6 +536,7 @@ class CGP():
 				gene_counter += 1
 				x2 = node_depends_on_which_nodes[self.gene[gene_counter]]
 				gene_counter += 1
+
 				# Combine the two lists into one list.
 				# The new list contains one instance of each value. No doubles.
 				x = list(set(x2).union(set(x1)))
@@ -518,7 +550,11 @@ class CGP():
 		assert gene_counter == len(self.gene)-1
 		return sorted(node_depends_on_which_nodes[self.gene[gene_counter]])
 
-	def which_parameters_are_used(self):
+	def which_parameters_are_used(self)->List[bool]:
+		"""
+		Returns a boolean list of length self.nr_of_parameters.
+		Element i is True iff parameter nr i is used in the function.
+		"""
 		# TODO: This shouldn't be re-calculated every time.
 		var_and_par = self.which_variables_and_parameters_are_used()
 
