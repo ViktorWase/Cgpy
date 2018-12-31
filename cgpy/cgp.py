@@ -34,63 +34,13 @@ And the second node is the first node minus x1. The first node is x1 plus x0.
 Which means that [0, 1, 0,  1, 2, 1,  3] is (x1+x0)-x1.
 """
 
-from math import sin, cos, sqrt, log, pow, exp, fabs, asin, acos, pi
+#from math import sin, cos, sqrt, log, pow, exp, fabs, asin, acos, pi
 from random import randint, random
-from copy import copy
+#from copy import copy
 import sys # Used to check python version.
-from typing import List, Union, Callable, cast # mypy for static typing. Run 'mypy cgp.py' to get results. mypy is installable via pip.
+from typing import List, Union, cast # mypy for static typing. Run 'mypy cgp.py' to get results. mypy is installable via pip.
 
-class Operation():
-	"""
-	A mathematical operation. We have a couple of the elementary ones, but 
-	more might be added later. 
-
-	Each object has:
-		- a name by which it is identified
-		- the function itself
-		- a dual version of the function. This means 
-		  that dual numbers are used.
-	"""
-	def __init__(self, op_name:str):
-		self.is_binary: bool
-		self.op_name:str = op_name
-		self.func: Union[Callable[[float, float], float], Callable[[float], float]]
-		if op_name == "sin":
-			self.func = lambda x: sin(x)
-			self.is_binary = False
-		elif op_name == "cos":
-			self.func = lambda x: cos(x)
-			self.is_binary = False
-		elif op_name == "acos":
-			self.func = lambda x: acos(x) if x<1 and x>-1 else 0.0
-			self.is_binary = False
-		elif op_name == "asin":
-			self.func = lambda x: asin(x) if x<1 and x>-1 else 0.0
-			self.is_binary = False
-		elif op_name == "+":
-			self.func = lambda x,y: x+y
-			self.is_binary = True
-		elif op_name == "-":
-			self.func = lambda x,y: x-y
-			self.is_binary = True
-		elif op_name == "*":
-			self.func = lambda x,y: x*y
-			self.is_binary = True
-		elif op_name == "sqr":
-			self.func = lambda x: x*x
-			self.is_binary = False
-		elif op_name == "log":
-			self.func = lambda x: log(x) if x>0 else 0.0
-			self.is_binary = False
-		elif op_name == "/":
-			self.func = lambda x, y: x/y if y!=0 else 0.0
-			self.is_binary = True
-		elif op_name == "id":
-			self.func = lambda x: x
-			self.is_binary = False
-		else:
-			assert(False) # TODO: Change to an error.
-		self.str = copy(op_name) # TODO: Is the copy actually needed?
+from operation import Operation
 
 def get_gene_max_values(dims:int, nr_of_parameters:int, len_of_op_table:int, nr_of_nodes:int, nodes_per_layer:int = 1)->List[int]:
 	"""
