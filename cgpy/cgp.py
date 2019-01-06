@@ -371,7 +371,7 @@ class CGP():
 		return all_node_vals[self.gene[gene_counter]]
 
 	def calc_function_str(self, parameters=[], var_names:List[str]=None)->str: #TODO: Add the number of significant figures of the parameters.
-	# TODO: Is this used?
+		# TODO: Is this used?
 		"""
 		This function returns the mathematical function of the CGP as a string.
 		For example 'x0+cos(0.4*x0)'.
