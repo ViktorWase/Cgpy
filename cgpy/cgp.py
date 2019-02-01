@@ -42,7 +42,7 @@ from typing import List, Union, cast # mypy for static typing. Run 'mypy cgp.py'
 
 from operation import Operation
 
-def get_gene_max_values(dims:int, nr_of_parameters:int, len_of_op_table:int, nr_of_nodes:int, nodes_per_layer:int = 1)->List[int]:
+def _get_gene_max_values(dims:int, nr_of_parameters:int, len_of_op_table:int, nr_of_nodes:int, nodes_per_layer:int = 1)->List[int]:
 	"""
 	A gene is a list of n ints, that define the CGP. Each such number has 
 	a minimum value, and a maximum value. The minimum value is always zero.
@@ -86,18 +86,18 @@ def create_random_cgp(dims:int, nr_of_parameters:int, op_table:List[Operation], 
 	Does what it says on the tin, duh.
 	"""
 	len_of_op_table = len(op_table)
-	max_vals = get_gene_max_values(dims, nr_of_parameters, len_of_op_table, nr_of_nodes, nodes_per_layer=nodes_per_layer)
+	max_vals = _get_gene_max_values(dims, nr_of_parameters, len_of_op_table, nr_of_nodes, nodes_per_layer=nodes_per_layer)
 
 	random_gene = [randint(0, max_vals[i]) for i in range(len(max_vals))]
 
 	return CGP(dims, op_table, random_gene, nr_of_parameters=nr_of_parameters, fast_setup=fast_setup)
 
 """
-The functions convert_cgp_2_str and convert_rec are used by the CGP-method calc_function_str().
+The functions _convert_cgp_2_str and _convert_rec are used by the CGP-method calc_function_str().
 They create a string that is human readable and represents the mathematical function
 of the CGP object.
 """
-def convert_cgp_2_str(op_table:List[Operation], gene:List[int], variable_names:List[str], nr_of_nodes:int, dims:int, parameters=[]):
+def _convert_cgp_2_str(op_table:List[Operation], gene:List[int], variable_names:List[str], nr_of_nodes:int, dims:int, parameters=[]):
 	# We start at the end node and recursively work our way back.
 	assert ( nr_of_nodes > 0 )
 	assert ( dims > 0 )
@@ -105,9 +105,9 @@ def convert_cgp_2_str(op_table:List[Operation], gene:List[int], variable_names:L
 	assert min(gene)>=0
 
 	current_node_nr = gene[-1]
-	return convert_rec(op_table, gene, variable_names, nr_of_nodes, dims + len(parameters), len(parameters), current_node_nr, parameters=parameters)
+	return _convert_rec(op_table, gene, variable_names, nr_of_nodes, dims + len(parameters), len(parameters), current_node_nr, parameters=parameters)
 
-def convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_parameters, current_node_nr, parameters=[]):
+def _convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_parameters, current_node_nr, parameters=[]):
 	"""
 	A recursive help function that takes a node in the CGP object and converts it into a str.
 	Since a node depends on other nodes, it will recursively call this function
@@ -147,7 +147,7 @@ def convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_p
 		else:
 			#... if it isn't, we need a recursive function call to calc it.
 			assert( gene[3 * (current_node_nr-total_dims) + 1] < current_node_nr )
-			left_str = "("+convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_parameters, gene[3 * (current_node_nr-total_dims) + 1], parameters=parameters)+")"
+			left_str = "("+_convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_parameters, gene[3 * (current_node_nr-total_dims) + 1], parameters=parameters)+")"
 
 		# Repeat the process with the right_str (str2)
 		if( gene[3 * (current_node_nr-total_dims) + 2] < total_dims ):
@@ -158,7 +158,7 @@ def convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_p
 
 		else:
 			assert( gene[3 * (current_node_nr-total_dims) + 2] < current_node_nr )
-			right_str = "("+convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_parameters, gene[3 * (current_node_nr-total_dims) + 2], parameters=parameters)+")"
+			right_str = "("+_convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_parameters, gene[3 * (current_node_nr-total_dims) + 2], parameters=parameters)+")"
 		return left_str+op.str+right_str
 	else: # op.is_binary
 
@@ -177,7 +177,7 @@ def convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_p
 
 		else:
 			#... if it isn't, we need a recursive function call to calc it.
-			middle_str = convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_parameters, gene[3 * (current_node_nr-total_dims) + 1], parameters=parameters)
+			middle_str = _convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_parameters, gene[3 * (current_node_nr-total_dims) + 1], parameters=parameters)
 
 		# NOTE: sqr means to-the-power-of-two. This is not written
 		# as sqr(x), but x^2. This is why it is treated separately.
@@ -208,12 +208,12 @@ class CGP():
 		self.has_setup_used_nodes = False
 
 		if not fast_setup:
-			self.gene_sanity_check()
-			self.setup_used_nodes_list()
+			self._gene_sanity_check()
+			self._setup_used_nodes_list()
 
 		self.nr_of_nodes = int((len(self.gene)-1)/3)+self.dims+self.nr_of_parameters
 
-	def gene_sanity_check(self)->None:
+	def _gene_sanity_check(self)->None:
 		"""
 		Makes sure that the gene input is consistent.
 		"""
@@ -228,7 +228,7 @@ class CGP():
 			assert self.gene[gene_counter] < i+nr_of_ins
 			gene_counter += 1
 
-	def setup_used_nodes_list(self):
+	def _setup_used_nodes_list(self):
 		# Nr of nodes excluding the output node
 		nr_of_nodes = int((len(self.gene)-1)/3)+self.dims+self.nr_of_parameters
 		self.has_setup_used_nodes = True
@@ -391,7 +391,7 @@ class CGP():
 		total_dims:int = len(parameters) + self.dims
 		nr_of_nodes:int = int((len(self.gene)-1)/3) + total_dims
 
-		return convert_cgp_2_str(self.op_table, self.gene, var_names, nr_of_nodes, self.dims, parameters=parameters)
+		return _convert_cgp_2_str(self.op_table, self.gene, var_names, nr_of_nodes, self.dims, parameters=parameters)
 
 	def get_mutated_copy(self, mute_rate:float = 0.1)->'CGP':
 		"""
@@ -411,7 +411,7 @@ class CGP():
 
 		new_gene = list(self.gene)
 		nr_of_nondim_and_non_par_nodes:int = self.nr_of_nodes - self.dims - self.nr_of_parameters
-		max_vals:List[int] = get_gene_max_values(self.dims, self.nr_of_parameters, len(self.op_table), nr_of_nondim_and_non_par_nodes, nodes_per_layer=self.nodes_per_layer)
+		max_vals:List[int] = _get_gene_max_values(self.dims, self.nr_of_parameters, len(self.op_table), nr_of_nondim_and_non_par_nodes, nodes_per_layer=self.nodes_per_layer)
 
 		# Mutate the gene.
 		for i in range(len(new_gene)):
@@ -430,7 +430,7 @@ class CGP():
 		new_cgp = CGP(self.dims, self.op_table, new_gene, nr_of_parameters=self.nr_of_parameters, fast_setup = not self.setup_used_nodes_list)
 		return new_cgp
 
-	def convert2str(self, parameters=[], var_names:List[str]=None):
+	def convert2str(self, parameters=[], var_names:List[str]=None): # TODO: Add docstr
 		if len(parameters) != self.nr_of_parameters:
 			print("Wrong number of parameters in the convert2str function.")
 
@@ -443,9 +443,9 @@ class CGP():
 		total_dims = len(parameters) + self.dims
 		nr_of_nodes = int((len(self.gene)-1)/3) + total_dims
 
-		return convert_cgp_2_str(self.op_table, self.gene, var_names, nr_of_nodes, self.dims, parameters=parameters)
+		return _convert_cgp_2_str(self.op_table, self.gene, var_names, nr_of_nodes, self.dims, parameters=parameters)
 
-	def print_function(self, parameters=[], var_names=None):
+	def print_function(self, parameters=[], var_names=None): # TODO: This should be removed
 		print(self.convert2str(parameters=parameters, var_names=var_names))
 
 	def which_variables_and_parameters_are_used(self)->List[int]:
