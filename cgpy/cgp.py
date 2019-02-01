@@ -395,7 +395,7 @@ class CGP():
 
 	def get_mutated_copy(self, mute_rate:float = 0.1)->'CGP':
 		"""
-		Creates a new CGp object by creating a new gene, that is a mutated
+		Creates a new CGP object by creating a new gene, that is a mutated
 		version of the one in this object.
 
 		# TODO: This function will be changed. In the future it will randomly 
