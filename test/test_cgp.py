@@ -2,6 +2,7 @@ import unittest
 from cgpy.cgp import CGP, Operation, create_random_cgp
 from random import gauss, randint, random
 from math import fabs, cos, sin
+from copy import deepcopy
 
 class TestCgp(unittest.TestCase):
 	def setUp(self):
@@ -122,6 +123,24 @@ class TestCgp(unittest.TestCase):
 
 		print(100.0*(1.0-(failed_runs)/(runs1*runs2)), "percent of the CGP cases (with parameters) worked.\n")
 		score *=(1.0-(failed_runs)/(runs1*runs2))
+
+		print("Testing the mutation function.")
+		run = 1000
+		for _ in range(run):
+
+			dims = randint(1, 10)
+			nr_of_parameters = randint(0, 5)
+
+			nr_of_nodes = randint(3, 20)
+			npl = 1
+			if random()<0.5:
+				npl = randint(2, 5)
+				nr_of_nodes = randint(1, 3)*npl
+			cgp = create_random_cgp(dims, nr_of_parameters, op_table, nr_of_nodes, fast_setup = random()>0.5, nodes_per_layer = npl)
+			cgp_old = deepcopy(cgp)
+			assert cgp == cgp_old
+			cgp_new = cgp.get_mutated_copy(mute_rate=random()) # This has a lot of asserts and checks in it. That's basically the unit test I guess.
+
 
 		print("Total score:", round(score*10, 2),"/ 10")
 
