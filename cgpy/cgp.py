@@ -40,7 +40,7 @@ from random import randint, random
 import sys # Used to check python version.
 from typing import List, Union, cast # mypy for static typing. Run 'mypy cgp.py' to get results. mypy is installable via pip.
 
-from operation import Operation
+from .operation import Operation
 
 def _get_gene_max_values(dims:int, nr_of_parameters:int, len_of_op_table:int, nr_of_nodes:int, nodes_per_layer:int = 1)->List[int]:
 	"""
@@ -212,6 +212,20 @@ class CGP():
 			self._setup_used_nodes_list()
 
 		self.nr_of_nodes = int((len(self.gene)-1)/3)+self.dims+self.nr_of_parameters
+
+	
+	def __eq__(self, other):
+		#Compares all elements in one cpg to all elements in another
+		#cgp to check if they are the same.
+		v1 = vars(self)
+		v2 = vars(other)
+
+		assert len(v1) == len(v2)
+		for key in v1:
+			if v1[key] != v2[key]:
+				return False
+		return True
+	
 
 	def _gene_sanity_check(self)->None:
 		"""

@@ -53,3 +53,5 @@ class Operation():
 		else:
 			assert(False) # TODO: Change to an error.
 		self.str = copy(op_name) # TODO: Is the copy actually needed?
+	def __eq__(self, other):
+		return self.op_name == other.op_name
