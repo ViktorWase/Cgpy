@@ -13,7 +13,7 @@ Install the package using pip
 
 The following code creates a random CGP and evaluates its function
 
-`
+```
 op_table = [Operation("+"), Operation("*"), Operation("sin")]
 
 dims = 2
@@ -23,6 +23,6 @@ cgp = create_random_cgp(dims, nr_of_parameters, op_table, nr_of_nodes)
 
 pnt = [0.5, 1.5]
 print(cgp.eval(pnt))
-`
+```
 
 See more examples in the example folder and the documentation at www.cgpy.org
