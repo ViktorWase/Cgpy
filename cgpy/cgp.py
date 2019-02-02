@@ -441,7 +441,7 @@ class CGP():
 		assert int((len(self.gene)-1)/3) ==  nr_of_nondim_and_non_par_nodes
 
 		# Create the new CGP object
-		new_cgp = CGP(self.dims, self.op_table, new_gene, nr_of_parameters=self.nr_of_parameters, fast_setup = not self.setup_used_nodes_list)
+		new_cgp = CGP(self.dims, self.op_table, new_gene, nr_of_parameters=self.nr_of_parameters, fast_setup = not self.has_setup_used_nodes)
 		return new_cgp
 
 	def convert2str(self, parameters=[], var_names:List[str]=None): # TODO: Add docstr
