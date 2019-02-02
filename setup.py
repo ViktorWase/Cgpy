@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="cgpy",
-    version="0.0.1",
+    version="0.0.2",
     author="Viktor Wase",
     author_email="viktorwase@gmail.com",
     description="A Python library for Cartesian genetic programming.",
