@@ -11,7 +11,7 @@ setuptools.setup(
     description="A Python library for Cartesian genetic programming.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="http://wase.io/",
+    url="http://cgpy.org/",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
