@@ -4,13 +4,13 @@ from typing import Union, Callable # mypy for static typing. Run 'mypy cgp.py' t
 
 class Operation():
 	"""
-	A mathematical operation. We have a couple of the elementary ones, but 
-	more might be added later. 
+	A mathematical operation. We have a couple of the elementary ones, but
+	more might be added later.
 
 	Each object has:
 		- a name by which it is identified
 		- the function itself
-		- a dual version of the function. This means 
+		- a dual version of the function. This means
 		  that dual numbers are used.
 	"""
 	def __init__(self, op_name:str):
@@ -50,8 +50,12 @@ class Operation():
 		elif op_name == "id":
 			self.func = lambda x: x
 			self.is_binary = False
+		elif op_name == "sqrt":
+			self.func = lambda x: sqrt(x) if x>0 else 0.0 #TODO: should this raise error instead
+			self.is_binary = False
 		else:
-			assert(False) # TODO: Change to an error.
+			raise ValueError('Operation not found.')
+			#assert(False) # TODO: Change to an error.
 		self.str = copy(op_name) # TODO: Is the copy actually needed?
 	def __eq__(self, other):
 		return self.op_name == other.op_name
