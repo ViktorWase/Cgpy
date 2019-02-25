@@ -1,8 +1,8 @@
 """
-CGP stands for Cartesian Genetic Programming, and is a network that 
+CGP stands for Cartesian Genetic Programming, and is a network that
 represents a function. It's really nice. Google it!
 
-It is defined by a gene and an operation table. The operation table is 
+It is defined by a gene and an operation table. The operation table is
 a list of mathematical operations (for example [+, -, *, cos]). The
 gene consists of n nodes and an ouput node. Each node, except for the
 output, consists of 3 numbers: the operation and the two inputs. There
@@ -10,7 +10,7 @@ are always two inputs. If the operation is unary (meaning that it only
 takes one input - for example cos), then the second input is simply ignored.
 The last node defines which of the other nodes that is to be the output.
 
-Let's the the example of a 2-dimensional CGP, with 
+Let's the the example of a 2-dimensional CGP, with
 operation_table =  [+, -, *, cos]
 gene = [0, 1, 0,  1, 2, 1,  3]
 
@@ -20,8 +20,8 @@ that correspond to operations.
 Thus [0, 1, 0,  0, 2, 1,  3] becomes [+, 1, 0,  -, 2, 1,  3]
 since operation_table[0] = + and operation_table[1] = -
 
-The other two numbers in the nodes are the indexes of the inputs. 0 in this 
-case corresponds to x0, and 1 to x1. Simple. But what would 2 means? That is 
+The other two numbers in the nodes are the indexes of the inputs. 0 in this
+case corresponds to x0, and 1 to x1. Simple. But what would 2 means? That is
 simply the first node (the one that goes: +, 1, 0,).
 
 Thus [0, 1, 0,  0, 2, 1,  3] becomes [+, x1, x0,  -, node0, x1,  3]
@@ -44,7 +44,7 @@ from .operation import Operation
 
 def _get_gene_max_values(dims:int, nr_of_parameters:int, len_of_op_table:int, nr_of_nodes:int, nodes_per_layer:int = 1)->List[int]:
 	"""
-	A gene is a list of n ints, that define the CGP. Each such number has 
+	A gene is a list of n ints, that define the CGP. Each such number has
 	a minimum value, and a maximum value. The minimum value is always zero.
 	This function will return a list of the n maximum values.
 	"""
@@ -54,9 +54,9 @@ def _get_gene_max_values(dims:int, nr_of_parameters:int, len_of_op_table:int, nr
 	assert dims > 0
 	assert nr_of_parameters >= 0
 
-	# The number of nodes has to be divisible by nodes_per_layer. 
+	# The number of nodes has to be divisible by nodes_per_layer.
 	# Otherwise the number of layers won't be an int, and that is strange.
-	assert nr_of_nodes%nodes_per_layer == 0 
+	assert nr_of_nodes%nodes_per_layer == 0
 
 	dim_and_pars = dims + nr_of_parameters
 
@@ -111,9 +111,9 @@ def _convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_
 	"""
 	A recursive help function that takes a node in the CGP object and converts it into a str.
 	Since a node depends on other nodes, it will recursively call this function
-	but with the other nodes as input. 
-	If the input is a variable or a parameter, then it will simply return the 
-	name of the variable (as given by variable_name), or the value of the 
+	but with the other nodes as input.
+	If the input is a variable or a parameter, then it will simply return the
+	name of the variable (as given by variable_name), or the value of the
 	parameter (as given by parameters).
 	"""
 	assert(nr_of_parameters == len(parameters))
@@ -130,8 +130,8 @@ def _convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_
 	nr_of_vars = total_dims-nr_of_parameters
 
 	if op.is_binary:
-		# The string is given by (str1)#(str2) if the operation is binary. 
-		# The #-sign is replaced by the sign of the operation. str1 and str2 
+		# The string is given by (str1)#(str2) if the operation is binary.
+		# The #-sign is replaced by the sign of the operation. str1 and str2
 		# are the strings returned by the 2 following recursive calls.
 		left_str = None
 		right_str = None
@@ -183,7 +183,7 @@ def _convert_rec(op_table, gene, variable_names, nr_of_nodes, total_dims, nr_of_
 		# as sqr(x), but x^2. This is why it is treated separately.
 		if op.str == "sqr":
 			return "("+middle_str+")^{2}"
-			
+
 		return op.str+"("+middle_str+")"
 
 class CGP():
@@ -197,7 +197,7 @@ class CGP():
 		assert dims > 0
 		assert len(op_table) > 0
 		assert nr_of_parameters >= 0
-		
+
 		self.op_table = op_table #NOTE: We only copy by reference here to speed it up a little.
 		self.gene = list(gene)
 		self.nr_of_parameters = nr_of_parameters
@@ -213,7 +213,7 @@ class CGP():
 
 		self.nr_of_nodes = int((len(self.gene)-1)/3)+self.dims+self.nr_of_parameters
 
-	
+
 	def __eq__(self, other):
 		#Compares all elements in one cpg to all elements in another
 		#cgp to check if they are the same.
@@ -225,7 +225,7 @@ class CGP():
 			if v1[key] != v2[key]:
 				return False
 		return True
-	
+
 
 	def _gene_sanity_check(self)->None:
 		"""
@@ -293,7 +293,7 @@ class CGP():
 				is_any_varible_used = True
 		self.is_constant = not is_any_varible_used
 
-		# Remove the parameters and variables 
+		# Remove the parameters and variables
 		nodes = nodes[self.dims+self.nr_of_parameters:]
 
 		assert len(nodes) == int((len(self.gene)-1)/3)
@@ -320,7 +320,7 @@ class CGP():
 		# Combined dimensionality of the variables and parameters.
 		total_dims:int = len(X) + len(parameters)
 
-		# Okay, so this is a litte weird. But n is the total number of 
+		# Okay, so this is a litte weird. But n is the total number of
 		# nodes used. A node is something that has a value and (possibly)
 		# connections to other nodes. The returned value is the value of
 		# the last node.
@@ -412,9 +412,9 @@ class CGP():
 		Creates a new CGP object by creating a new gene, that is a mutated
 		version of the one in this object.
 
-		# TODO: This function will be changed. In the future it will randomly 
+		# TODO: This function will be changed. In the future it will randomly
 		change the gene UNTIL it alters a part of the gene that is used. A lot
-		of the gene is actually not used (fun fact, the same goes for the 
+		of the gene is actually not used (fun fact, the same goes for the
 		human genome).
 		"""
 		if mute_rate<0:
@@ -464,7 +464,7 @@ class CGP():
 
 	def which_variables_and_parameters_are_used(self)->List[int]:
 		"""
-		Returns a list of all variables and parameters that are actually 
+		Returns a list of all variables and parameters that are actually
 		used.
 		Note that if the function is x-x, x/x, 0*x and so on, then
 		the variable x IS used.
@@ -533,7 +533,7 @@ class CGP():
 
 if __name__ == '__main__':
 	# This are all operations that the CGP is allowed to use. These are not set in stone.
-	op_table = [Operation("+"), Operation("*"), Operation("sin"), Operation("cos"), Operation("sqr"), Operation("-"), Operation("log"), Operation("/")]
+	op_table = [Operation("+"), Operation("*"), Operation("sin"), Operation("cos"), Operation("sqr"), Operation("-"), Operation("log"), Operation("/"), Operation("sqrt")]
 
 	dims = 2
 	nr_of_parameters = 0
