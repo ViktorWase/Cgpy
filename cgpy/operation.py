@@ -51,7 +51,7 @@ class Operation():
 			self.func = lambda x: x
 			self.is_binary = False
 		elif op_name == "sqrt":
-			self.func lambda x: sqrt(x) if x>0 else 0.0 #TODO: should this raise error instead
+			self.func = lambda x: sqrt(x) if x>0 else 0.0 #TODO: should this raise error instead
 			self.is_binary = False
 		else:
 			raise ValueError('Operation not found.')
