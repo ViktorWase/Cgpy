@@ -26,3 +26,5 @@ print(cgp.eval(pnt))
 ```
 
 See more examples in the example folder and the documentation at www.cgpy.org
+
+Cgpy is developed by Viktor Wase with contributions and assistance from John Brynte Turesson and Johannes Wennberg. 
