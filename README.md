@@ -9,7 +9,7 @@ Run `python -m unittest discover -v` in the root folder.
 ## Getting Started
 
 Install the package using pip
-`pip install --index-url https://test.pypi.org/simple/ cgpy`
+`pip install cgpy`
 
 The following code creates a random CGP and evaluates its function
 
