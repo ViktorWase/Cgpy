@@ -1,6 +1,6 @@
 """
 CGP stands for Cartesian Genetic Programming, and is a network that
-represents a function.
+represents a function. It's really nice. Google it!
 
 It is defined by a gene and an operation table. The operation table is
 a list of mathematical operations (for example [+, -, *, cos]). The
@@ -216,6 +216,7 @@ class CGP():
 
 		self.nr_of_nodes = int((len(self.gene)-1)/3)+self.dims+self.nr_of_parameters
 
+
 	def __eq__(self, other):
 		# Compares all elements in one cpg to all elements in another
 		# cgp to check if they are the same.
@@ -227,6 +228,7 @@ class CGP():
 			if v1[key] != v2[key]:
 				return False
 		return True
+
 
 	def _gene_sanity_check(self) -> None:
 		"""
@@ -535,7 +537,7 @@ class CGP():
 
 if __name__ == '__main__':
 	# This are all operations that the CGP is allowed to use. These are not set in stone.
-	op_table = [Operation("+"), Operation("*"), Operation("sin"), Operation("cos"), Operation("sqr"), Operation("-"), Operation("log"), Operation("/")]
+	op_table = [Operation("+"), Operation("*"), Operation("sin"), Operation("cos"), Operation("sqr"), Operation("-"), Operation("log"), Operation("/"), Operation("sqrt")]
 
 	dims = 2
 	nr_of_parameters = 0
