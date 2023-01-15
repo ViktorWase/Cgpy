@@ -9,7 +9,7 @@ Run `python -m unittest discover -v` in the root folder.
 ## Getting Started
 
 Install the package using pip
-`pip install --index-url https://test.pypi.org/simple/ cgpy`
+`pip install cgpy`
 
 The following code creates a random CGP and evaluates its function
 
@@ -26,3 +26,5 @@ print(cgp.eval(pnt))
 ```
 
 See more examples in the example folder and the documentation at www.cgpy.org
+
+Cgpy is developed by Viktor Wase with contributions and assistance from John Brynte Turesson and Johannes Wennberg. 

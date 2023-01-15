@@ -35,6 +35,7 @@ new_vers = input("Enter next version: ")
 update_version(new_vers, version)
 os.system("python setup.py sdist bdist_wheel")
 #os.system("python -m twine upload --repository-url https://test.pypi.org/legacy/ dist/*")
+os.system("python -m twine upload dist/*")
 
 os.system("python -m pip install --user --upgrade pdoc")
 
@@ -50,6 +51,7 @@ files = ["cgp.m.html", "index.html"]
 destination = cwd+"\\"+"docs"
 for f in files:
 	shutil.move(source+"\\"+f, destination+"\\"+f)
+
 
 print("Don't forget to commit and push the contents of the docs file, otherwise the documentation won't be updated")
 
